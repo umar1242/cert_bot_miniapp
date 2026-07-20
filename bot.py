@@ -131,25 +131,34 @@ async def main() -> None:
     from webapp import runtime
     webapp_runner = await start_webapp()
 
-    async def _set_menu_button(url: str) -> None:
+    async def _set_menu_button(url: str, app_type: str = "planner") -> None:
         from aiogram.types import MenuButtonWebApp, WebAppInfo
         runtime.set_webapp_url(url)
+        
+        # Определяем текст и URL кнопки в зависимости от типа
+        if app_type == "cert":
+            button_text = "🎓 Сертификат"
+            button_url = url.rstrip("/") + "/cert"
+        else:  # planner по умолчанию
+            button_text = "📊 Планер"
+            button_url = url.rstrip("/")
+        
         try:
             await bot.set_chat_menu_button(
-                menu_button=MenuButtonWebApp(text="📊 Планер", web_app=WebAppInfo(url=url))
+                menu_button=MenuButtonWebApp(text=button_text, web_app=WebAppInfo(url=button_url))
             )
-            logger.info("Кнопка меню Mini App обновлена: %s", url)
+            logger.info("Кнопка меню Mini App обновлена: %s (%s)", button_text, button_url)
         except Exception as e:
             logger.warning("Не удалось установить кнопку меню Mini App: %s", e)
 
-    # Статический URL из .env (если задан) — ставим сразу
+    # Статический URL из .env (если задан) — ставим сразу (Планер по умолчанию)
     if settings.WEBAPP_URL:
-        await _set_menu_button(settings.WEBAPP_URL)
+        await _set_menu_button(settings.WEBAPP_URL, "planner")
 
     # Либо поднимаем встроенный SSH-туннель (serveo), URL придёт асинхронно
     if settings.TUNNEL_ENABLED:
         from webapp.tunnel import run_tunnel
-        asyncio.create_task(run_tunnel(_set_menu_button))
+        asyncio.create_task(run_tunnel(lambda url: _set_menu_button(url, "planner")))
 
     # Устанавливаем команды меню при старте
     await set_bot_commands(bot)
