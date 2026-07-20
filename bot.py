@@ -63,9 +63,9 @@ async def set_bot_commands(bot: Bot) -> None:
         BotCommand(command="help",       description="❓ Помощь"),
         BotCommand(command="admin",      description="🛠 Админ-панель"),
     ]
+    # Если настроен WebApp — добавляем команду только для сертификатов
     if settings.WEBAPP_URL:
-        private_commands.insert(3, BotCommand(command="planner", description="📊 Планер и статистика"))
-        private_commands.insert(4, BotCommand(command="cert", description="🎓 Сертификационные тесты"))
+        private_commands.insert(3, BotCommand(command="cert", description="🎓 Сертификационные тесты"))
     await bot.set_my_commands(private_commands, scope=BotCommandScopeDefault())
 
     # Группы — только /start нужен (запуск квиза по ссылке)
@@ -102,7 +102,6 @@ async def main() -> None:
     # Роутеры — порядок важен: edit и creator должны быть до общих хэндлеров
     from routers.admin      import router as admin_router
     from routers.start      import router as start_router
-    from routers.planner    import router as planner_router
     from routers.cert       import router as cert_router
     from routers.deck       import router as deck_router
     from routers.creator    import router as creator_router
@@ -114,7 +113,6 @@ async def main() -> None:
 
     dp.include_router(admin_router)
     dp.include_router(start_router)
-    dp.include_router(planner_router)
     dp.include_router(cert_router)
     # deck_router — ДО creator: его file-хэндлер (в состоянии CreateDeck) должен
     # перехватывать документ раньше, чем общий F.document в creator.py
@@ -131,17 +129,13 @@ async def main() -> None:
     from webapp import runtime
     webapp_runner = await start_webapp()
 
-    async def _set_menu_button(url: str, app_type: str = "planner") -> None:
+    async def _set_menu_button(url: str, app_type: str = "cert") -> None:
         from aiogram.types import MenuButtonWebApp, WebAppInfo
         runtime.set_webapp_url(url)
         
-        # Определяем текст и URL кнопки в зависимости от типа
-        if app_type == "cert":
-            button_text = "🎓 Сертификат"
-            button_url = runtime.build_webapp_url("/cert")
-        else:  # planner по умолчанию
-            button_text = "📊 Планер"
-            button_url = runtime.build_webapp_url()
+        # Определяем текст и URL кнопки — теперь только сертификат
+        button_text = "🎓 Сертификат"
+        button_url = runtime.build_webapp_url("/cert")
         
         try:
             await bot.set_chat_menu_button(
@@ -151,14 +145,14 @@ async def main() -> None:
         except Exception as e:
             logger.warning("Не удалось установить кнопку меню Mini App: %s", e)
 
-    # Статический URL из .env (если задан) — ставим сразу (Планер по умолчанию)
+    # Статический URL из .env (если задан) — ставим сразу (сертификат)
     if settings.WEBAPP_URL:
-        await _set_menu_button(settings.WEBAPP_URL, "planner")
+        await _set_menu_button(settings.WEBAPP_URL, "cert")
 
     # Либо поднимаем встроенный SSH-туннель (serveo), URL придёт асинхронно
     if settings.TUNNEL_ENABLED:
         from webapp.tunnel import run_tunnel
-        asyncio.create_task(run_tunnel(lambda url: _set_menu_button(url, "planner")))
+        asyncio.create_task(run_tunnel(lambda url: _set_menu_button(url, "cert")))
 
     # Устанавливаем команды меню при старте
     await set_bot_commands(bot)

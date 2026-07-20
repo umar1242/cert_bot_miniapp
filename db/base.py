@@ -58,11 +58,3 @@ async def create_all_tables() -> None:
             ))
         except Exception:
             pass
-        # Планер: привязка сессии/события к пункту плана (для уже существующих БД)
-        for _tbl in ("sessions", "study_events"):
-            try:
-                await conn.execute(text(
-                    f"ALTER TABLE {_tbl} ADD COLUMN plan_item_id INTEGER"
-                ))
-            except Exception:
-                pass
