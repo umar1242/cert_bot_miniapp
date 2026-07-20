@@ -138,10 +138,10 @@ async def main() -> None:
         # Определяем текст и URL кнопки в зависимости от типа
         if app_type == "cert":
             button_text = "🎓 Сертификат"
-            button_url = url.rstrip("/") + "/cert"
+            button_url = runtime.build_webapp_url("/cert")
         else:  # planner по умолчанию
             button_text = "📊 Планер"
-            button_url = url.rstrip("/")
+            button_url = runtime.build_webapp_url()
         
         try:
             await bot.set_chat_menu_button(

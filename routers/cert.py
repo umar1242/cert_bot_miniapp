@@ -29,17 +29,16 @@ async def cmd_cert_menu(message: Message, db: AsyncSession) -> None:
             "Включи туннель (TUNNEL_ENABLED=true) или задай WEBAPP_URL в .env."
         )
         return
-    base = base.rstrip("/")
 
     variants = await cs.list_variants(db, message.from_user.id)
     ready = [v for v in variants if v.status == CertVariantStatus.ready]
     draft_count = len(variants) - len(ready)
 
-    rows = [[InlineKeyboardButton(text="🛠 Открыть конструктор", web_app=WebAppInfo(url=f"{base}/cert"))]]
+    rows = [[InlineKeyboardButton(text="🛠 Открыть конструктор", web_app=WebAppInfo(url=runtime.build_webapp_url("/cert")))]]
     for v in ready[:15]:
         rows.append([InlineKeyboardButton(
             text=f"▶️ Пройти «{v.title}»",
-            web_app=WebAppInfo(url=f"{base}/cert?take={v.id}"),
+            web_app=WebAppInfo(url=runtime.build_webapp_url("/cert", take=v.id)),
         )])
     kb = InlineKeyboardMarkup(inline_keyboard=rows)
 
@@ -53,7 +52,6 @@ async def cmd_cert_menu(message: Message, db: AsyncSession) -> None:
     lines.append("\nВыбери действие 👇")
 
     await message.answer("\n".join(lines), reply_markup=kb)
-
 
 # ---------------------------------------------------------------------------
 # Остальные кнопки нижней навигации — проксируем на существующие команды.
