@@ -12,7 +12,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, W
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import CertVariantStatus
-from keyboards.main_kb import BTN_CERT, BTN_DECKS, BTN_HOME, BTN_MYQUIZ, BTN_PLANNER, BTN_SETTINGS
+from keyboards.main_kb import BTN_CERT, BTN_DECKS, BTN_HOME, BTN_MYQUIZ, BTN_SETTINGS
 from services import cert_service as cs
 from webapp import runtime
 
@@ -67,12 +67,6 @@ async def kb_home(message: Message, db: AsyncSession, lang: str) -> None:
 async def kb_myquiz(message: Message, db: AsyncSession, lang: str) -> None:
     from routers.start import cmd_myquiz
     await cmd_myquiz(message, db, lang)
-
-
-@router.message(F.text == BTN_PLANNER)
-async def kb_planner(message: Message) -> None:
-    from routers.planner import cmd_planner
-    await cmd_planner(message)
 
 
 @router.message(F.text == BTN_DECKS)

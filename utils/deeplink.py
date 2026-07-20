@@ -1,9 +1,6 @@
 """
 utils/deeplink.py
 Генерация и парсинг deep link для квизов.
-
-Формат: https://t.me/BOT_USERNAME?start=quiz_QUIZID
-Параметр start передаётся боту как аргумент команды /start.
 """
 from config import settings
 
@@ -43,20 +40,5 @@ def parse_deck_start_param(param: str) -> int | None:
     raw = param[len("deck_"):]
     try:
         return int(raw)
-    except ValueError:
-        return None
-
-
-def make_plan_item_link(item_id: int) -> str:
-    """Deep link для запуска задания плана «с регистрацией»."""
-    return f"https://t.me/{settings.BOT_USERNAME}?start=pi_{item_id}"
-
-
-def parse_plan_item_param(param: str) -> int | None:
-    """Разбирает аргумент /start для регистрируемого задания плана. Возвращает plan_item_id или None."""
-    if not param or not param.startswith("pi_"):
-        return None
-    try:
-        return int(param[len("pi_"):])
     except ValueError:
         return None
